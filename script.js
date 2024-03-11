@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let gridCells;
     let snake = [];
+    let food = {};
+    let score = 0;
+
+    const scoreEl = document.getElementById('score');
 
     function coordsToIndex(x, y) {
         return x + (y * CELLS_IN_ROW);
@@ -33,15 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         gridCells = document.querySelectorAll('.grid-cell');
 
-        drawSnake()
+        drawSnake();
         drawFood();
+        drawScore();
     }
     drawGame();
 
     function drawSnake() {
-        gridCells.forEach(item => {
-            item.classList.remove('snake-part');
-        });
+        gridCells.forEach(item => item.classList.remove('snake-part'));
 
         snake.forEach(item => {
             const index = coordsToIndex(item.x, item.y);
@@ -50,18 +53,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function drawFood() {
-        const foodX = randomIntFromInterval(0, 11);
-        const foodY = randomIntFromInterval(0, 11);
+        food.x = randomIntFromInterval(0, 11);
+        food.y = randomIntFromInterval(0, 11);
 
-        const index = coordsToIndex(foodX, foodY);
+        if (snake.some(item => item.x === food.x && item.y === food.y)) return drawFood();
 
+        const index = coordsToIndex(food.x, food.y);
         gridCells[index].classList.add('food');
+    }
+
+    function drawScore() {
+        scoreEl.textContent = score;
+        if (score === 50) endGame('won');
     }
 
     let snakeDirection = null; // This variable will hold the current direction of the snake
 
-    function endGame() {
+    function endGame(state) {
+        if (state === 'lose') {
+            alert(`GAME OVER =( Your score is ${score}`);
+        } else {
+            alert(`YOU WON! Your score is ${score}`);
+        }
         snakeDirection = null;
+        score = 0;
         gridCells.forEach(item => {
             item.classList.remove('snake-part', 'food');
         })
@@ -75,77 +90,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (snakeDirection === 'UP') {
             if (snake[0].y - 1 < 0) {
-                alert('game over');
-                endGame();
-                return;
+                return endGame('lose');
             }
 
             snake.unshift({x: snake[0].x , y: snake[0].y - 1});
-            snake.pop();
+            if (checkIfSnakeCrashed()) {
+                return endGame('lose');
+            }
         }
 
         if (snakeDirection === 'LEFT') {
             if (snake[0].x % CELLS_IN_ROW === 0 || snake[0].x - 1 < 0) {
-                alert('game over');
-                endGame();
-                return;
+                return endGame('lose');
             }
 
             snake.unshift({x: snake[0].x - 1 , y: snake[0].y});
-            snake.pop();
+            if (checkIfSnakeCrashed()) {
+                return endGame('lose');
+            }
         }
 
         if (snakeDirection === 'DOWN') {
             if (snake[0].y + 1 >= CELLS_IN_ROW) {
-                alert('game over');
-                endGame();
-                return;
+                return endGame('lose');
             }
 
             snake.unshift({x: snake[0].x, y: snake[0].y + 1});
-            snake.pop();
+            if (checkIfSnakeCrashed()) {
+                return endGame('lose');
+            }
         }
 
         if (snakeDirection === 'RIGHT') {
             if ((snake[0].x + 1) % CELLS_IN_ROW === 0 || snake[0].x + 1 >= gridCells.length) {
-                alert('game over');
-                endGame();
-                return;
+                return endGame('lose');
             }
 
             snake.unshift({x: snake[0].x + 1, y: snake[0].y});
-            snake.pop();
+            if (checkIfSnakeCrashed()) return endGame('lose');
         }
 
+        if (!checkIfFoodReached()) {
+            snake.pop();
+            return drawSnake();
+        }
+
+        drawFood();
         drawSnake();
+        drawScore();
+    }
+
+    function checkIfFoodReached() {
+        if (snake[0].x === food.x && snake[0].y === food.y) {
+            const index = coordsToIndex(food.x, food.y);
+            gridCells[index].classList.remove('food');
+            score += 1;
+            return true;
+        }
+        return false;
+    }
+
+    function checkIfSnakeCrashed() {
+        const index = coordsToIndex(snake[0].x, snake[0].y);
+        return gridCells[index].classList.contains('snake-part');
     }
 
     document.addEventListener('keydown', (e) => {
         // This event listener updates the snake's direction based on key presses
-        if (e.code === 'KeyW') {
-            if (snakeDirection !== 'DOWN') {
-                snakeDirection = 'UP';
-            }
-        }
-
-        if (e.code === 'KeyA') {
-            if (snakeDirection !== 'RIGHT') {
-                snakeDirection = 'LEFT';
-            }
-        }
-
-        if (e.code === 'KeyS') {
-            if (snakeDirection !== 'UP') {
-                if (snakeDirection !== null) {
-                    snakeDirection = 'DOWN';
+        switch (e.code) {
+            case 'KeyW':
+                if (snakeDirection !== 'DOWN') snakeDirection = 'UP';
+                break;
+            case 'KeyA':
+                if (snakeDirection !== 'RIGHT') snakeDirection = 'LEFT';
+                break;
+            case 'KeyS':
+                if (snakeDirection !== 'UP') {
+                    if (snakeDirection !== null) snakeDirection = 'DOWN';
                 }
-            }
-        }
-
-        if (e.code === 'KeyD') {
-            if (snakeDirection !== 'LEFT') {
-                snakeDirection = 'RIGHT';
-            }
+                break;
+            case 'KeyD':
+                if (snakeDirection !== 'LEFT') snakeDirection = 'RIGHT';
+                break;
         }
     });
 
