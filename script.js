@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let snakeDirection = null; // This variable will hold the current direction of the snake
+    let newDirectionSet = false; // Flag indicating if a new direction has already been set since the last move
 
     function endGame(state) {
         if (state === 'lose') {
@@ -84,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function moveSnake() {
+        newDirectionSet = false; // Reset the flag at each move function call
+
         if (!snakeDirection) {
             return;
         }
@@ -157,21 +160,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', (e) => {
         // This event listener updates the snake's direction based on key presses
+        if (newDirectionSet) {
+            // If the direction has already been changed since the last move, ignore the key press
+            return;
+        }
+
+        let newDirection;
+
         switch (e.code) {
             case 'KeyW':
-                if (snakeDirection !== 'DOWN') snakeDirection = 'UP';
+                if (snakeDirection !== 'DOWN') newDirection  = 'UP';
                 break;
             case 'KeyA':
-                if (snakeDirection !== 'RIGHT') snakeDirection = 'LEFT';
+                if (snakeDirection !== 'RIGHT') newDirection = 'LEFT';
                 break;
             case 'KeyS':
-                if (snakeDirection !== 'UP') {
-                    if (snakeDirection !== null) snakeDirection = 'DOWN';
-                }
+                if (snakeDirection !== 'UP' && snakeDirection !== null) newDirection  = 'DOWN';
                 break;
             case 'KeyD':
-                if (snakeDirection !== 'LEFT') snakeDirection = 'RIGHT';
+                if (snakeDirection !== 'LEFT') newDirection  = 'RIGHT';
                 break;
+        }
+
+        if (newDirection && snakeDirection !== newDirection) {
+            snakeDirection = newDirection;
+            newDirectionSet = true; // Set the flag to indicate that the direction has been changed
         }
     });
 
