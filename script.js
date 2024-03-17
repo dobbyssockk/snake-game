@@ -62,10 +62,24 @@ document.addEventListener('DOMContentLoaded', () => {
         gridCells[index].classList.add('food');
     }
 
+    let intervalId; // To stop the interval later
+    let moveInterval = 250 // This controls how fast the snake moves
+
+    function changeSpeed(newMoveInterval) {
+        clearInterval(intervalId); // Prevent multiple intervals from running simultaneously
+        moveInterval = newMoveInterval;
+        intervalId = setInterval(moveSnake, moveInterval);
+    }
+
     function drawScore() {
         scoreEl.textContent = score;
         if (score === 50) endGame('won');
+        if (score === 15) changeSpeed(200);
+        if (score === 35) changeSpeed(150);
     }
+
+    // Initialize the movement of the snake, starting the game's main loop
+    intervalId = setInterval(moveSnake, moveInterval);
 
     let snakeDirection = null; // This variable will hold the current direction of the snake
     let newDirectionSet = false; // Flag indicating if a new direction has already been set since the last move
@@ -143,11 +157,14 @@ document.addEventListener('DOMContentLoaded', () => {
         drawScore();
     }
 
+    const eatingFood = new Audio('food.mp3');
+
     function checkIfFoodReached() {
         if (snake[0].x === food.x && snake[0].y === food.y) {
             const index = coordsToIndex(food.x, food.y);
             gridCells[index].classList.remove('food');
             score += 1;
+            eatingFood.play();
             return true;
         }
         return false;
@@ -187,6 +204,4 @@ document.addEventListener('DOMContentLoaded', () => {
             newDirectionSet = true; // Set the flag to indicate that the direction has been changed
         }
     });
-
-    setInterval(moveSnake, 250);
 });
